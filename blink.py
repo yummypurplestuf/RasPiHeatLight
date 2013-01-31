@@ -16,11 +16,7 @@ while 1:
      sleep(1)
      GPIO.output(11, True)
      sleep(1)
-
      GPIO.output(11, False)
      sleep(1)
      GPIO.output(11, True)
      sleep(1)
-
-	 
-cd9207b228e9e0a97c9037c9be6ffaf8e5f6da11

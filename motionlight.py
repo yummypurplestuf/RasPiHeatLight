@@ -7,17 +7,18 @@ GPIO.setup(22, GPIO.OUT)
 GPIO.setup(11, GPIO.IN)
 
 
+
 motion = False
 while True:
 		
-	
 	if GPIO.input(11) == True:
+		
 		GPIO.output(22, False)
 		print "Intruder"
 		sleep(2)
-		
+
 	if GPIO.input(11) == False:
 		GPIO.output(22, True)
 		print "Nothing is MOVING"
-
 	
+# GPIO.cleanup() should be used when the program has completed, it's not used here because of the continual loop
