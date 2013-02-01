@@ -37,3 +37,15 @@ while True:
 	GPIO.output(pin3, True)
 	GPIO.output(pin4, True)
 	sleep(flash)		
+
+
+        if GPIO.input(11) == True:
+
+                GPIO.output(22, False)
+                print "Intruder"
+                sleep(2)
+
+        if GPIO.input(11) == False:
+                GPIO.output(22, True)
+                print "Nothing is MOVING"
+

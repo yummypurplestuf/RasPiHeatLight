@@ -1,0 +1,34 @@
+`gspread <https://github.com/burnash/gspread>`_ is a super simple library
+for interacting with `Google Spreadsheets`_.
+
+.. _Google Spreadsheets: http://www.google.com/google-d-s/spreadsheets/
+
+Features
+--------
+
+* Open a spreadsheet by its *title*, *url* or *key*.
+* Select cells by labels, e.g. 'A1'.
+* Extract range, entire row or column values.
+* Independent of Google Data Python client library.
+* Python 3 support.
+
+Basic usage
+-----------
+
+Connect to Google Spreadsheet and set a value to a cell::
+
+    import gspread
+
+    # Login with your Google account
+    gc = gspread.login('thedude@abid.es','password')
+
+    # Open a worksheet from spreadsheet with one shot
+    wks = gc.open("Where is the money Lebowski?").sheet1
+
+    wks.update_acell('B2', "it's down there somewhere, let me take another look.")
+
+
+Code and documentation
+----------------------
+
+Check `gspread on GitHub <https://github.com/burnash/gspread>`_.
