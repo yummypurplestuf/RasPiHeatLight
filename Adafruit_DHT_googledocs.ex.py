@@ -6,15 +6,20 @@ import sys
 import time
 import datetime
 import gspread
+import os
 
 # ===========================================================================
 # Google Account Details
 # ===========================================================================
 
 # Account details for google docs
-email       = 'you@somewhere.com'
-password    = '$hhh!'
-spreadsheet = 'SpreadsheetName'
+email       = 'jared.luellen@cs.olivetcollege.edu'
+password    = os.getenv("MY_PASSWORD")
+spreadsheet = 'Lab Temperature'
+
+# To add MY_PASSWORD on a local machine edit .bashrc and append at the bottom MY_PASSWORD="password"
+# Then to set that as your password, run the .bashrc like (. .bashrc) <---enter this in terminal without the parens
+# That way you password doesn't live in the code and is controlled by the machine you're executing from :)
 
 # ===========================================================================
 # Example Code
