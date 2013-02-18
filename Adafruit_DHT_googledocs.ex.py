@@ -14,8 +14,8 @@ import os
 
 # Account details for google docs
 email       = 'jared.luellen@cs.olivetcollege.edu'
-password    = os.getenv("MY_PASSWORD")
-spreadsheet = 'Lab Temperature'
+password    = subprocess.check_output(["echo", "$MY_PASSWORD"]);
+spreadsheet = 'Computer Science Lab Temperature'
 
 # To add MY_PASSWORD on a local machine edit .bashrc and append at the bottom MY_PASSWORD="password"
 # Then to set that as your password, run the .bashrc like (. .bashrc) <---enter this in terminal without the parens
