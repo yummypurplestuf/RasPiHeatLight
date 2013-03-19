@@ -1,0 +1,33 @@
+Help on package gspread:
+
+NNAAMMEE
+    gspread
+
+FFIILLEE
+    /home/likewise-open/EISR/jluellen/s2013/RasPiHeatLight/gspread-0.0.13/gspread/__init__.py
+
+DDEESSCCRRIIPPTTIIOONN
+    gspread
+    ~~~~~~~
+    
+    Google Spreadsheets client library.
+
+PPAACCKKAAGGEE  CCOONNTTEENNTTSS
+    client
+    exceptions
+    httpsession
+    models
+    ns
+    urls
+    utils
+
+DDAATTAA
+    ____aauutthhoorr____ = 'Anton Burnashev'
+    ____vveerrssiioonn____ = '0.0.13'
+
+VVEERRSSIIOONN
+    0.0.13
+
+AAUUTTHHOORR
+    Anton Burnashev
+

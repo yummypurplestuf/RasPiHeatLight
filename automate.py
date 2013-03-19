@@ -26,6 +26,7 @@
 
 from time import sleep
 import RPi.GPIO as GPIO
+import os
 import subprocess
 import re
 import datetime
@@ -101,6 +102,8 @@ while(True):
                 	print "Temperature: %.1f F" % temp_sensor
                 	print "Humidity:    %.1f %%" % humidity
                 	print "----------------------------------------"
+					print
+					
 			gettemp = False
 			
 	def motionTrue(now, motion):
