@@ -63,8 +63,6 @@ GPIO.setup(temp, GPIO.IN)			# Inits the Temperature Sensor pin
   
 while(True):
 	
-			
-			
 
 
     def getTemp():
@@ -72,42 +70,42 @@ while(True):
 		gettemp = True
 
                 # Run the DHT program to get the humidity and temperature readings!
-                while gettemp == True:
+            while gettemp == True:
 		             		  	
-                	output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
+            	output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
 
-                        # search for temperature printout
-                	matches = re.search("Temp =\s+([0-9.]+)", output)
-                	if (not matches):
-				sleep(3)
-                        	continue
-                	temp = float(matches.group(1))
+                    # search for temperature printout
+            	matches = re.search("Temp =\s+([0-9.]+)", output)
+            	if (not matches):
+					sleep(3)
+            	  	continue
+            	temp = float(matches.group(1))
 
-                        # search for humidity printout
-                	matches = re.search("Hum =\s+([0-9.]+)", output)
-                	if (not matches):
-                		sleep(3)
-                        	continue
-                	humidity = float(matches.group(1))
+                    # search for humidity printout
+            	matches = re.search("Hum =\s+([0-9.]+)", output)
+            	if (not matches):
+            		sleep(3)
+                   	continue
+            	humidity = float(matches.group(1))
 
-                        # Convert temp from C to F
-                	temp = temp*1.8+32
-			temp_sensor = temp
-		        if temp == 77:
+                    # Convert temp from C to F
+            	temp = temp*1.8+32
+				temp_sensor = temp
+	        	if temp == 77:
+					gettemp = False
+				global temp_sensor
+            	
+				print
+				print "---------------------------------------"
+				print "Current Conditions Are:"
+				print
+	        	print "Temperature: %.1f F" % temp_sensor
+            	print "Humidity:    %.1f %%" % humidity
+            	print "----------------------------------------"
+				print
+
 				gettemp = False
-			global temp_sensor
-                	
-			print
-			print "---------------------------------------"
-			print "Current Conditions Are:"
-			print
-                	print "Temperature: %.1f F" % temp_sensor
-                	print "Humidity:    %.1f %%" % humidity
-                	print "----------------------------------------"
-					print
-
-			gettemp = False
-			
+		
 	def motionTrue(now, motion):
 		if GPIO.input(motion_sensor) == True:
 			

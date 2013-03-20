@@ -77,6 +77,7 @@ while(True):
                     # Login with your Google account
         try:
             gc = gspread.login(email, password)
+            print "try gSpread"
         except:
             print "Unable to log in.  Check your email address/password"
             sys.exit()
