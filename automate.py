@@ -61,7 +61,7 @@ GPIO.setup(temp, GPIO.IN)           # Inits the Temperature Sensor pin
 while(True):
     
             
-    def gSpread():
+    def gSpread(self):
 
 
         """ These are used for login information with Google Spread sheet, create a "password.txt" file and type your password in there for authentication 
@@ -91,7 +91,7 @@ while(True):
             print "Unable to open the spreadsheet.  Check your filename: %s" % spreadsheet
             sys.exit()
 
-    def getTemp():
+    def getTemp(self):
         
         gettemp = True
 
@@ -135,52 +135,9 @@ while(True):
 
         gettemp = False
             
-    def motionTrue(now, motion):
-        if GPIO.input(motion_sensor) == True:
-            
-            motion = True
-
-            now = datetime.datetime.now()
-            
-            if temp_sensor > desired_temp:
-                GPIO.output(fan, True)          
-            
-            if temp_sensor < desired_temp:
-                GPIO.output(fan, False)
-            
-                GPIO.output(light_bank_1, False)
-                sleep(1)
-        
-                GPIO.output(light_bank_2, False)
-                sleep(1)
-
-                GPIO.output(light_bank_3, False)
-                sleep(1)
-                print "Motion"
-
-    def motionFalse(later, motion):
-        if GPIO.input(motion_sensor) == False:
-            GPIO.output(fan, True)
-            GPIO.output(light_bank_1, True)
-            GPIO.output(light_bank_2, True)
-            GPIO.output(light_bank_3, True)
-            
-            print "Turning devices OFF"
 
 
-        if GPIO.input(motion_sensor) == True:
-
-            temp_sensor
-            motion = True
-            motionTrue(now, motion)
-            getTemp()
-        if GPIO.input(motion_sensor) == False:
-            temp_sensor
-            motion = False 
-        if later > now.replace(hour=0, minute=0, second=5, microsecond=0):
-            motionFalse(later, motion)
-
-    def postData(temp_sensor, humidity, motion):
+    def postData(self, temp_sensor, humidity, motion):
 
         val = worksheet.cell(2, 10).value
         val = int(val)

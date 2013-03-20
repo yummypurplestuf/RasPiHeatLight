@@ -9,12 +9,12 @@
 ########################################################################
 # INFO: 
 
-#			Lighting Scheme
+#           Lighting Scheme
 # 32w per overhead bulb, bank 1 = 192w, 192w/120v = 1.6A
 # 32w per overhead bulb, bank 2 = 192w, 192w/120v = 1.6A
 # 32w per overhead bulb, bank 3 = 256w, 256w/120v = 2.13A
 
-#			Electric Motor 
+#           Electric Motor 
 # 1 hp = 745.699872w, 1/6hp motor = 124.9499w, 124.9499w/120v = 1.0413A
 #########################################################################
 
@@ -33,67 +33,67 @@ import datetime
 import time
 
 
-fan = 25 							# Pin 1 on 4-Channel Relay
-light_bank_1 = 24					# Pin 2 on 4-Channel Relay
-light_bank_2 = 8					# Pin 3 on 4-Channel Relay
-light_bank_3 = 23					# Pin 4 on 4-Channel Relay
-motion_sensor = 11					# Pin for Motion Sensor Input
-temp = 4							# Pin for Temperature/Humidity Sensor
-now = datetime.datetime.now()		# Grabs current time and date
-later = datetime.datetime.now()		# Grabs current time and date
-motion = False				
+fan = 25                            # Pin 1 on 4-Channel Relay
+light_bank_1 = 24                   # Pin 2 on 4-Channel Relay
+light_bank_2 = 8                    # Pin 3 on 4-Channel Relay
+light_bank_3 = 23                   # Pin 4 on 4-Channel Relay
+motion_sensor = 11                  # Pin for Motion Sensor Input
+temp = 4                            # Pin for Temperature/Humidity Sensor
+now = datetime.datetime.now()       # Grabs current time and date
+later = datetime.datetime.now()     # Grabs current time and date
+motion = False              
 gettemp = True
-desired_temp = 75					# The temperature you would like it to be
-temp_sensor = 0				
+desired_temp = 75                   # The temperature you would like it to be
+temp_sensor = 0             
 
 ###################################################################################
 ###################################################################################
 
-GPIO.setwarnings(False)			
-GPIO.setmode(GPIO.BCM)				# GPIO Board init
+GPIO.setwarnings(False)         
+GPIO.setmode(GPIO.BCM)              # GPIO Board init
 
-GPIO.setup(fan, GPIO.OUT)			# Inits the relay connected to the fan
-GPIO.setup(light_bank_1, GPIO.OUT)	# "			"
-GPIO.setup(light_bank_2, GPIO.OUT)	# "			"
-GPIO.setup(light_bank_3, GPIO.OUT)	# "		      	"
-GPIO.setup(motion_sensor, GPIO.IN)	# Inits the Motion Sensor pin
-GPIO.setup(temp, GPIO.IN)			# Inits the Temperature Sensor pin
+GPIO.setup(fan, GPIO.OUT)           # Inits the relay connected to the fan
+GPIO.setup(light_bank_1, GPIO.OUT)  # "         "
+GPIO.setup(light_bank_2, GPIO.OUT)  # "         "
+GPIO.setup(light_bank_3, GPIO.OUT)  # "             "
+GPIO.setup(motion_sensor, GPIO.IN)  # Inits the Motion Sensor pin
+GPIO.setup(temp, GPIO.IN)           # Inits the Temperature Sensor pin
 
 
   
 while(True):
-	
+    
 
 
     def getTemp(self, temp_sensor):
-		
-		gettemp = True
+        
+        gettemp = True
 
                 # Run the DHT program to get the humidity and temperature readings!
-		while gettemp == True:
-	             		  	
-			output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
+        while gettemp == True:
+                            
+            output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
 
                 # search for temperature printout
-			matches = re.search("Temp =\s+([0-9.]+)", output)
-			if (not matches):
-				sleep(3)
-        	
-        	temp = float(matches.group(1))
+            matches = re.search("Temp =\s+([0-9.]+)", output)
+            if (not matches):
+                sleep(3)
+            
+            temp = float(matches.group(1))
 
                 # search for humidity printout
-        	matches = re.search("Hum =\s+([0-9.]+)", output)
-        	if (not matches):
-        		sleep(3)
+            matches = re.search("Hum =\s+([0-9.]+)", output)
+            if (not matches):
+                sleep(3)
             
-        	humidity = float(matches.group(1))
+            humidity = float(matches.group(1))
 
                 # Convert temp from C to F
-        	temp = temp*1.8+32
-        	temp_sensor = temp
-        	if temp == 77:
-				gettemp = False
-			print "Current Conditions Are:"
-			print
-			print "Temperature: %.1f F" % temp_sensor
-			print "Humidity:    %.1f %%" % humidity
+            temp = temp*1.8+32
+            temp_sensor = temp
+            if temp == 77:
+                gettemp = False
+            print "Current Conditions Are:"
+            print
+            print "Temperature: %.1f F" % temp_sensor
+            print "Humidity:    %.1f %%" % humidity
