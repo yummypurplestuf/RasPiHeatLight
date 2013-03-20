@@ -130,7 +130,7 @@ int readDHT(int type, int pin) {
       (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) ) {
      // yay!
      if (type == DHT11)
-	printf("Temp = %d *C, Hum = %d \%\n", data[2], data[0]);
+	printf("Temp = %d \*C, Hum = %d \%\n", data[2], data[0]);
      if (type == DHT22) {
 	float f, h;
 	h = data[0] * 256 + data[1];
@@ -139,7 +139,7 @@ int readDHT(int type, int pin) {
 	f = (data[2] & 0x7F)* 256 + data[3];
         f /= 10.0;
         if (data[2] & 0x80)  f *= -1;
-	printf("Temp =  %.1f *C, Hum = %.1f \%\n", f, h);
+	printf("Temp =  %.1f \*C, Hum = %.1f \%\n", f, h);
     }
     return 1;
   }

@@ -44,7 +44,7 @@ later = datetime.datetime.now()     # Grabs current time and date
 motion = False              
 gettemp = True
 desired_temp = 75                   # The temperature you would like it to be
-temp_sensor = 0             
+temperature = 0             
 
 ###################################################################################
 ###################################################################################
@@ -65,22 +65,28 @@ def getTemp():
     temperature_matches = None
     humidity_matches = None
 
-    while not matches:
+    while True:
         output = subprocess.check_output(["./Adafruit_DHT", "11", "4"])
         print output
     # search for temperature printout
-        temperature_matches = re.search("Temp =\s+([0-9.]+)", output)
-        humidity_matches = re.search("Hum =\s+([0-9.]+)", output)
-
-        temp_sensor = float(matches.group(1))
-        humidity = float(matches.group(1))
-
-        # Convert temp from C to F
-        temp_sensor = temp_sensor * 1.8 + 32
-        print "Current Conditions Are:"
-        print
-        print "Temperature: %.1f F" % temp_sensor
-        print "Humidity:    %.1f %%" % humidity
-
+        valid_temp = re.search("Data \(([\d]+)\):", output)
+        valid_temp = int(valid_temp.group(1))
+        print valid_temp
+        if valid_temp == 40:
+            matches = re.search("Temp = ([\d]+) \*C, Hum = ([\d]+) %", output)
+            if not matches == None:
+        
+                temperature = float(matches.group(1))
+                humidity = float(matches.group(2))
+                        
+                print temperature, humidity
+                # Convert temp from C to F
+                temperature = temperature * 1.8 + 32
+                
+                print "Current Conditions Are:"
+                print
+                print "Temperature: %.1f F" % temperature
+                print "Humidity:    %.1f %%" % humidity
+                
 while True:
     getTemp()
