@@ -65,7 +65,7 @@ while(True):
 	
 
 
-    def getTemp():
+    def getTemp(self, temp_sensor):
 		
 		gettemp = True
 
@@ -90,12 +90,12 @@ while(True):
 
                 # Convert temp from C to F
         	temp = temp*1.8+32
-			temp_sensor = temp
+        	temp_sensor = temp
         	if temp == 77:
 				gettemp = False
 			global temp_sensor
         	
-			print
+        	print
 			print "---------------------------------------"
 			print "Current Conditions Are:"
 			print
