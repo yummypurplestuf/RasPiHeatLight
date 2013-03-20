@@ -97,4 +97,3 @@ while(True):
 		print
 		print "Temperature: %.1f F" % temp_sensor
 		print "Humidity:    %.1f %%" % humidity
-			gettemp = False
