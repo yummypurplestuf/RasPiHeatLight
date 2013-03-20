@@ -93,8 +93,8 @@ while(True):
         	temp_sensor = temp
         	if temp == 77:
 				gettemp = False
-		print "Current Conditions Are:"
-		print
-		print "Temperature: %.1f F" % temp_sensor
-		print "Humidity:    %.1f %%" % humidity
-		gettemp = False
+			print "Current Conditions Are:"
+			print
+			print "Temperature: %.1f F" % temp_sensor
+			print "Humidity:    %.1f %%" % humidity
+			gettemp = False
