@@ -70,7 +70,7 @@ while(True):
 		gettemp = True
 
                 # Run the DHT program to get the humidity and temperature readings!
-        while gettemp == True:
+		while gettemp == True:
 	             		  	
         	output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
 
