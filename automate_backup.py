@@ -98,7 +98,7 @@ while(True):
 		print
 		print "Temperature: %.1f F" % temp_sensor
 		print "Humidity:    %.1f %%" % humidity
-			gettemp = False
+		gettemp = False
 		
 	def motionTrue(now, motion):
 		if GPIO.input(motion_sensor) == True:
