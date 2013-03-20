@@ -94,16 +94,14 @@ while(True):
         	if temp == 77:
 				gettemp = False
 				global temp_sensor
-        	
-        	print
+			print
 			print "---------------------------------------"
 			print "Current Conditions Are:"
 			print
-        	print "Temperature: %.1f F" % temp_sensor
-        	print "Humidity:    %.1f %%" % humidity
-        	print "----------------------------------------"
+			print "Temperature: %.1f F" % temp_sensor
+			print "Humidity:    %.1f %%" % humidity
+			print "----------------------------------------"
 			print
-
 			gettemp = False
 		
 	def motionTrue(now, motion):
