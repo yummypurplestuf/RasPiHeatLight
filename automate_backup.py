@@ -60,29 +60,19 @@ GPIO.setup(motion_sensor, GPIO.IN)  # Inits the Motion Sensor pin
 GPIO.setup(temp, GPIO.IN)           # Inits the Temperature Sensor pin
 
 
-  
-while(True):
-    getTemp()
-
-
 def getTemp():
-    gettemp = True
-    while gettemp == True:
-        # Run the DHT program to get the humidity and temperature readings!
+    # Run the DHT program to get the humidity and temperature readings!
+    temperature_matches = None
+    humidity_matches = None
+
+    while not matches:
         output = subprocess.check_output(["./Adafruit_DHT", "11", "4"])
+        print output
+    # search for temperature printout
+        temperature_matches = re.search("Temp =\s+([0-9.]+)", output)
+        humidity_matches = re.search("Hum =\s+([0-9.]+)", output)
 
-        # search for temperature printout
-        matches = re.search("Temp =\s+([0-9.]+)", output)
-        if not matches:
-            sleep(3)
-        
         temp_sensor = float(matches.group(1))
-
-        # search for humidity printout
-        matches = re.search("Hum =\s+([0-9.]+)", output)
-        if not matches:
-            sleep(3)
-        
         humidity = float(matches.group(1))
 
         # Convert temp from C to F
@@ -91,4 +81,6 @@ def getTemp():
         print
         print "Temperature: %.1f F" % temp_sensor
         print "Humidity:    %.1f %%" % humidity
-        gettemp = False
+
+while True:
+    getTemp()
