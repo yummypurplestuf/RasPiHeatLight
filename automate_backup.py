@@ -93,7 +93,7 @@ while(True):
         	temp_sensor = temp
         	if temp == 77:
 				gettemp = False
-			global temp_sensor
+				global temp_sensor
         	
         	print
 			print "---------------------------------------"
