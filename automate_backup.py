@@ -72,11 +72,11 @@ while(True):
                 # Run the DHT program to get the humidity and temperature readings!
 		while gettemp == True:
 	             		  	
-        	output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
+			output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
 
                 # search for temperature printout
-        	matches = re.search("Temp =\s+([0-9.]+)", output)
-        	if (not matches):
+			matches = re.search("Temp =\s+([0-9.]+)", output)
+			if (not matches):
 				sleep(3)
         	  	continue
         	temp = float(matches.group(1))
