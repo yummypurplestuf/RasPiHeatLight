@@ -62,38 +62,33 @@ GPIO.setup(temp, GPIO.IN)           # Inits the Temperature Sensor pin
 
   
 while(True):
-    
+    getTemp()
 
 
-    def getTemp(self, temp_sensor):
+def getTemp():
+    gettemp = True
+    while gettemp == True:
+        # Run the DHT program to get the humidity and temperature readings!
+        output = subprocess.check_output(["./Adafruit_DHT", "11", "4"])
+
+        # search for temperature printout
+        matches = re.search("Temp =\s+([0-9.]+)", output)
+        if not matches:
+            sleep(3)
         
-        gettemp = True
+        temp_sensor = float(matches.group(1))
 
-                # Run the DHT program to get the humidity and temperature readings!
-        while gettemp == True:
-                            
-            output = subprocess.check_output(["./Adafruit_DHT", "11", "4"]);
+        # search for humidity printout
+        matches = re.search("Hum =\s+([0-9.]+)", output)
+        if not matches:
+            sleep(3)
+        
+        humidity = float(matches.group(1))
 
-                # search for temperature printout
-            matches = re.search("Temp =\s+([0-9.]+)", output)
-            if (not matches):
-                sleep(3)
-            
-            temp = float(matches.group(1))
-
-                # search for humidity printout
-            matches = re.search("Hum =\s+([0-9.]+)", output)
-            if (not matches):
-                sleep(3)
-            
-            humidity = float(matches.group(1))
-
-                # Convert temp from C to F
-            temp = temp*1.8+32
-            temp_sensor = temp
-            if temp == 77:
-                gettemp = False
-            print "Current Conditions Are:"
-            print
-            print "Temperature: %.1f F" % temp_sensor
-            print "Humidity:    %.1f %%" % humidity
+        # Convert temp from C to F
+        temp_sensor = temp_sensor * 1.8 + 32
+        print "Current Conditions Are:"
+        print
+        print "Temperature: %.1f F" % temp_sensor
+        print "Humidity:    %.1f %%" % humidity
+        gettemp = False
