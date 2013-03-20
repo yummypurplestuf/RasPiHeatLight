@@ -99,31 +99,20 @@ while(True):
 		print "Temperature: %.1f F" % temp_sensor
 		print "Humidity:    %.1f %%" % humidity
 		gettemp = False
-		
 	def motionTrue(now, motion):
 		if GPIO.input(motion_sensor) == True:
-			
 			motion = True
-
 			now = datetime.datetime.now()
-			
 			if temp_sensor > desired_temp:
-				GPIO.output(fan, True)			
-			
+				GPIO.output(fan, True)
 			if temp_sensor < desired_temp:
 				GPIO.output(fan, False)
-			
-			
-			
-				
 			GPIO.output(light_bank_1, False)
-       	       		sleep(1)
-     	
-       			GPIO.output(light_bank_2, False)
+       	    sleep(1)
+     		GPIO.output(light_bank_2, False)
 			sleep(1)
-
-       			GPIO.output(light_bank_3, False)
-       			sleep(1)
+   			GPIO.output(light_bank_3, False)
+   			sleep(1)
 			print "Motion"
 
 	def motionFalse(later, motion):
