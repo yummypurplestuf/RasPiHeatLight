@@ -49,7 +49,7 @@ except:
  
 val = worksheet.cell(2, 10).value
 val = int(val)
-while val > 0:
+while val > 2:
   
   
   temp = 75
