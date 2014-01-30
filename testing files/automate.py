@@ -64,9 +64,12 @@ while(True):
     def gSpread(self):
 
 
-        """ These are used for login information with Google Spread sheet, create a "password.txt" file and type your password in there for authentication 
-            to Google. Be sure to remember to add "password.txt" to your ".gitignore" file if you are using Git/GitHub so that you don't post your password
-            to the entire world.
+        """ 
+        
+        These are used for login information with Google Spread sheet, create a "password.txt" file and type your password in there for authentication 
+        to Google. Be sure to remember to add "password.txt" to your ".gitignore" file if you are using Git/GitHub so that you don't post your password
+        to the entire world.
+        
         """
 
 
@@ -133,7 +136,7 @@ while(True):
             print "----------------------------------------"
             print
 
-        gettemp = False
+
             
 
 
@@ -146,7 +149,7 @@ while(True):
             now = datetime.datetime.now()
 
             date =  datetime.date.today().strftime("%m %d %Y")
-            current_time = time.strftime( "%H:%M:%S") 
+            current_time = time.strftime( "%H:%M:%S")
 
             try:
                 values = [date, current_time, temp_sensor, humidity, motion]
