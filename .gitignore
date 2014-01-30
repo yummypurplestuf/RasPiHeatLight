@@ -1,6 +1,6 @@
 user_info.txt
 gspread
-
+.gitignore
 
 *.py[cod]
 
