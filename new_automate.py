@@ -19,14 +19,14 @@
 #########################################################################
 
 
-from time import sleep
+import time
 import RPi.GPIO as GPIO
-import os
 import subprocess
 import re
 import datetime
 import sys
 import gspread
+import mechanize
 
 
 
@@ -62,6 +62,7 @@ def main():
     get_date_and_time = get_date_and_time()
     date = get_date_and_time[0]
     time = get_date_and_time[1]
+    post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion)
 
 
 
@@ -85,7 +86,7 @@ def get_temp_and_humidity():
         
         # waits 3 seconds if bad data was recieved from temp sensor
         else:
-            sleep(3)
+            time.sleep(3)
 
     humidity = sum(humidity_list)/ len(humidity_list) 
     temperature = sum(temperature_list)/ len(temperature_list)     
@@ -137,11 +138,11 @@ def lights(motion):
     # sets the lights on or off depending on motion being detected in the room
     # TODO: add a timing system to delay turning lights off after a period of time
     GPIO.output(light_bank_1, motion)
-    sleep(3)
+    time.sleep(3)
     GPIO.output(light_bank_2, motion)
-    sleep(3)
+    time.sleep(3)
     GPIO.output(light_bank_2, motion)
-    sleep(3)
+    time.sleep(3)
 
 
 def get_motion():
@@ -155,8 +156,42 @@ def get_motion():
 
 
 def get_outdoor_temperature():
-    # will be used later on
-    pass
+    # will be used later on using mechanize 
+    # Generates a web browser instance 
+    # Opens www.whatsmyip.com/ and gets external IP address
+    br = mechanize.Browser()
+
+    # Browser options
+    br.set_handle_equiv(True)
+    br.set_handle_redirect(True)
+    br.set_handle_referer(True)
+    br.set_handle_robots(False)
+
+    # Follows refresh 0 but not hangs on refresh > 0
+    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+    # User-Agent makes the destination website think it's from a real person
+    br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+    html = br.open('http://www.weather.com/')
+    html = html.read()
+    html = unicode(html, errors='ignore')
+    
+    # for f in br.forms():
+    #     print f
+    # select the form on the website
+    br.select_form(nr=0)
+    # input location in search box
+    br['where'] = "Olivet, MI"
+    html = br.submit()
+    html = html.read()
+    outside_list = []
+    # matches temperature and unit, then append it to a list
+    match = re.search('<span itemprop="temperature-fahrenheit">(\d*)</span>', html)
+    outside_list.append(match.group(1))
+    match = re.search('<span class="wx-unit">(.)</span>', html) 
+    
+    outside_list.append(u'\xb0'.encode("UTF-8") + match.group(1))
+    return outside_list
 
 
 def get_date_and_time():
@@ -173,22 +208,22 @@ def get_date_and_time():
     return date, time
 
 
-def post_to_google_spreadsheet(fahrenheit, humidity, motion, date, time):
-
+def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
 
     """ 
+    These are used for login information with Google Spread sheet, create a user_info.txt file in the same directory as the automate.py file.
+    In the user_info.txt file add:
     
-    These are used for login information with Google Spread sheet, create a "password.txt" file and type your password in there for authentication 
-    to Google. Be sure to remember to add "password.txt" to your ".gitignore" file if you are using Git/GitHub so that you don't post your password
-    to the entire world.
+    email@gmail.com
+    password
     
-    email       = 'email@gmail.com'
-    password    = linestring = open('password.txt', 'r').read()
-    spreadsheet = 'Computer Science Lab Temperature'
+    save the file and add user_info.txt to your .gitignore file within the directory.
+    I will soon be adding crontab support as well.
+    Don't forget to create a Google Spreadsheet and change the 'Computer Science Lab Temperature' down below to the name of your spreadsheet file.
     """
 
 
-    user_info = open('/home/pi/rasp_heat/user_info.txt', 'r')
+    user_info = open('/home/pi/RasPiHeatLight/user_info.txt', 'r')
     user_name = user_info.readline()
     user_pass = user_info.readline()
     spreadsheet = 'Computer Science Lab Temperature'
