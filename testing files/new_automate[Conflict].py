@@ -44,7 +44,7 @@ false_time_list = []
 GPIO.setwarnings(False)         
 GPIO.setmode(GPIO.BCM)              # GPIO Board init
 
-GPIO.setup(fan_motor, GPIO.OUT)           # Inits the relay connected to the fan
+GPIO.setup(fan, GPIO.OUT)           # Inits the relay connected to the fan
 GPIO.setup(light_bank_1, GPIO.OUT)  # "         "
 GPIO.setup(light_bank_2, GPIO.OUT)  # "         "
 GPIO.setup(light_bank_3, GPIO.OUT)  # "         "
@@ -64,27 +64,18 @@ def main():
         motion = get_motion()
         motion_detected_time = motion[1]
         motion = motion[0]
-        light_status = lights(motion, motion_detected_time)
+        lights(motion, motion_detected_time)
         temperature = get_temp_and_humidity()
         fahrenheit = temperature[0]
         humidity = temperature[1]
-        fan_status = fan(fahrenheit)
-        date = get_date_and_time()
-        time = date[1]
-        date = date[0]
+        current_air_value = fan(fahrenheit)
+        print current_air_value
 
-
-        print_status(motion, motion_detected_time, light_status, temperature, fahrenheit, humidity, fan_status)
-        post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion)
         
+        time.sleep(1)
 
 
-def print_status(motion, motion_detected_time, light_status, temperature, fahrenheit, humidity, fan_status):
-        print '     '
-        print "Motion is: " + str(motion) + ' ' + str(motion_detected_time)
-        print "Light Status: " + str(light_status)
-        print "Temperature Stats: " + str(fahrenheit) + ' ' + str(humidity)
-        print "Fan Status: " + str(fan_status)
+
     
 def get_temp_and_humidity():
     """
@@ -126,67 +117,37 @@ def fan(fahrenheit):
     by either cold or hot water (depending on the season) you must 
     know which one it is in order to heat or cool the room accordingly
     """
-    cold_outside = [1,2,3,11,12]
-    hot_outside = [6,7,8,9]
-    easy_months = cold_outside + hot_outside
-    easy_months = easy_months.sort()    
+    cold_outside = [1,2,3,4,10,11,12]
+    hot_outside = [5,6,7,8,9]
+    outside_temperature = get_outdoor_temperature()
+    outside_temperature = int(outside_temperature[0])
+    
     current_date = get_date_and_time()[0]
     current_date = current_date.split('/')
     current_month = int(current_date[0])
 
-    if current_month in cold_outside:
+    if outside_temperature < 55:
         # then heat will be needed
         current_air_value = 'hot'
         if fahrenheit < desired_temp:
-            GPIO.output(fan_motor, False)
+            GPIO.output(fan, False)
             fan_action = 'ON'
         elif fahrenheit > desired_temp:
-            GPIO.output(fan_motor, True)
+            GPIO.output(fan, True)
             fan_action = 'OFF'
 
-    elif current_month in hot_outside:
+    if outside_temperature > 65:
         # then air conditioning will be needed
         current_air_value = 'cold'
         if fahrenheit > desired_temp:
-            GPIO.output(fan_motor, False)
+            GPIO.output(fan, False)
             fan_action = 'ON'
         elif fahrenheit < desired_temp:
-            GPIO.output(fan_motor, True)
+            GPIO.output(fan, True)
             fan_action = 'OFF'
-    
-    elif current_month not in easy_months:
-        # if the current month is not obvious then check www.weather.com
-        # and compare the temperature accordingly
-        outside_temperature = get_outdoor_temperature()
-        outside_temperature = int(outside_temperature[0])
 
-        if outside_temperature > 65:
-            # Means this is spring or warmer weather
-            current_air_value = 'hot'
-            if fahrenheit < desired_temp:
-                GPIO.output(fan_motor, False)
-                fan_action = 'ON'
-            elif fahrenheit > desired_temp:
-                GPIO.output(fan_motor, True)
-                fan_action = 'OFF'
-            else:
-                GPIO.output(fan_motor, True)
-                fan_action = 'OFF'
-
-        if outside_temperature < 65:
-            # means it is winter or colder weather
-            current_air_value = 'cold'
-            if fahrenheit < desired_temp:
-                GPIO.output(fan_motor, False)
-                fan_action = 'ON'
-            elif fahrenheit > desired_temp:
-                GPIO.output(fan_motor, True)
-                fan_action = 'OFF'
-            else:
-                GPIO.output(fan_motor, True)
-                fan_action = 'OFF'
-
-    return fan_action, current_air_value
+    print fan_action
+    return current_air_value
     """
     *** NEED TO ADD TEST TO SEE IF HEAT OR AC IS ON
     """
@@ -204,7 +165,6 @@ def lights(motion, motion_detected_time):
         GPIO.output(light_bank_3, False)
         # resets the list of times for false list
         false_time_list = []
-        light_status = True
 
     elif motion == False:
         # Converts current time into number of minutes 20:15 --> 1215 minutes
@@ -224,7 +184,6 @@ def lights(motion, motion_detected_time):
         if len(false_time_list) > 5:
             false_time_list = [false_time]
         elapsed_time = abs(false_time - current_time)
-        light_status = True
         # where light delay is evaluated against the lowest time, which determines if the lights should be
         # shut off or not
         if elapsed_time >= light_delay:
@@ -233,8 +192,6 @@ def lights(motion, motion_detected_time):
             GPIO.output(light_bank_1, True)
             GPIO.output(light_bank_2, True)
             GPIO.output(light_bank_3, True)
-            light_status = False
-    return light_status
 
 
 def get_motion():
@@ -343,7 +300,10 @@ def get_external_ip():
 
 
 def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
+
     """ 
+    *** STILL NEEDS TO BE DONE ***
+
     These are used for login information with Google Spread sheet, create a user_info.txt file in the same directory as the automate.py file.
     In the user_info.txt file add:
     
@@ -375,15 +335,6 @@ def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
         worksheet = gc.open(spreadsheet).sheet1
         # Alternatively, open a spreadsheet using the spreadsheet's key
         # worksheet = gc.open_by_key('0BmgG6nO_6dprdS1MN3d3MkdPa142WFRrdnRRUWl1UFE')
-        # A1 = worksheet.acell('A1')
-        
-        # worksheet.append_row(date)
-        data_set = [date, time, fahrenheit, humidity, motion]
-        worksheet.add_rows(1)
-        row = str(worksheet.row_count)
-        columns = "ABCDEFG"
-        for col, datum in enumerate(data_set):
-            worksheet.update_acell(columns[col] + row, datum)
     except:
         print "Unable to open the spreadsheet.  Check your filename: %s" % spreadsheet
         
