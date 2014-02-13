@@ -36,14 +36,16 @@ light_bank_2 = 8                    # Pin 3 on 4-Channel Relay
 light_bank_3 = 23                   # Pin 4 on 4-Channel Relay
 motion_sensor = 11                  # Pin for Motion Sensor Input
 temp = 4                            # Pin for Temperature/Humidity Sensor
-desired_temp = 75                   # The temperature you would like it to be           
-light_delay = 15
-temp_sensor_delay = 3
-outside_temperature_delay = 10
 
-false_time_list = []
-outside_temperature_list = []
-temperature_sensor_delay_list = []
+desired_temp = 75                   # The temperature you would like it to be           
+light_delay = 1
+temp_sensor_delay = 1
+outside_temperature_delay = 60
+
+light_status_list = [0, 0]          
+outside_temperature_list = [0, 0]
+motion_list = [0, 0]
+temperature_sensor_delay_list = [0, 0, 0]
 ###################################################################################
 
 GPIO.setwarnings(False)         
@@ -64,24 +66,17 @@ NEED TO WRITE A TIMING FUNCTION TO HANDLE ALL OF THE TIMING OF LIGHTS, TEMP, FAN
 def main():
     
     while True:
-        # try:    
-        motion = get_motion()
-        motion_detected_time_in_minutes = motion[1]
-        motion = motion[0]
-        temperature = get_temp_and_humidity()
-        fahrenheit = temperature_sensor_delay_list[1]
-        humidity = temperature_sensor_delay_list[2]
-        fan_status = fan(fahrenheit)
-        outside_temperature = get_outdoor_temperature()
-            
-        light_status = lights(motion)
+        try:    
+            motion = get_motion()
+            check_timing(motion)
+
 
             # print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature)
             # post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion)
         
-        # except:
-        #     sys_exit_commands()
-        #     sys.exit()
+        except:
+            sys_exit_commands()
+            sys.exit()
 
 def print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature):
         print '     '
@@ -99,6 +94,66 @@ def sys_exit_commands():
     GPIO.output(light_bank_2, True)
     GPIO.output(light_bank_3, True)
     
+def check_timing(motion):
+    """
+    needs to return True and False based on which functions need to be ran so that get_date_time isn't ran as often 
+    functions need to add their last updated time to their respective list so this function can evaluate whether or
+    not a specfic value needs to be updated or not
+
+    """
+    global light_status_list
+    global outside_temperature_list
+    global temperature_sensor_delay_list
+    
+    global light_delay
+    global temp_sensor_delay
+    global outside_temperature_delay
+    global desired_temp
+    current_time = get_date_and_time()[2]
+
+    try:
+        if sum(light_status_list) == 0:
+            lights(motion)
+        if sum(outside_temperature_list) == 0:
+            get_outdoor_temperature()
+        if sum(temperature_sensor_delay_list) == 0:
+            get_temp_and_humidity()
+
+        light_time = light_status_list[0]
+        outside_time = outside_temperature_list[0]
+        temperature_time = temperature_sensor_delay_list[0]
+        got_good_data = True
+    except:
+        got_good_data = False
+
+    print light_status_list, outside_temperature_list, temperature_sensor_delay_list
+
+    if got_good_data == True:
+        
+        if len(light_status_list) != 0:
+            last_added = light_time
+            elapsed_time = abs(last_added - current_time)
+            if elapsed_time > light_delay:
+                if light_status_list[1] == False:    
+                    lights(motion = False)
+            if light_status_list[1] == True:
+                lights(motion = True)
+
+        if temperature_sensor_delay_list != desired_temp:
+            fan(temperature_sensor_delay_list[1])
+        
+        if len(outside_temperature_list) != 0:
+            last_added = outside_time
+            elapsed_time = abs(last_added - current_time)
+            if elapsed_time == outside_temperature_delay:
+                get_outdoor_temperature()
+        
+        if len(temperature_sensor_delay_list) != 0:
+            last_added = temperature_time
+            elapsed_time = abs(last_added - current_time)
+            if elapsed_time == temp_sensor_delay:    
+                get_temp_and_humidity()
+
 def get_temp_and_humidity():
     """
     Runs a C file that interacts with the DHT11 sensor, matches the temperature and humidity
@@ -106,57 +161,31 @@ def get_temp_and_humidity():
         so that the temperature and humidity values can be averaged out in order to get more 
         accurate values.
     """
-    temperature_list = []
-    humidity_list = []
     
     global temp_sensor_delay
     global temperature_sensor_delay_list
-    current_time = get_date_and_time()[2]
-    
-    if len(temperature_sensor_delay_list) ==0:
-        temperature_sensor_delay_list.append(current_time)
-        temperature_sensor_delay_list[0] = temperature_sensor_delay_list[0] + temp_sensor_delay + 1
-        run_temp_sensor = True
 
-    last_added_time = temperature_sensor_delay_list[0]
-    elapsed_time = abs(last_added_time - current_time)
-
-    if elapsed_time < temp_sensor_delay:
-        if len(temperature_sensor_delay_list) == 3:
-            fahrenheit = temperature_sensor_delay_list[1]
-            humidity = temperature_sensor_delay_list [2]
-            return fahrenheit, humidity
-            run_temp_sensor = False
-
-    if elapsed_time >= temp_sensor_delay:
-        run_temp_sensor = True
-    
-    if run_temp_sensor == True:
+    try:
         # Run the DHT program to get the humidity and temperature readings!
         output = subprocess.check_output(["./Adafruit_DHT", "11", "4"])
         match = re.search('Temp = ([0-9]+) \*C, Hum = ([0-9]+)', output)
         if match:
-            temperature_list.append(float(match.group(1)))
-            humidity_list.append(float(match.group(2)))
-            humidity = round(sum(humidity_list) / len(humidity_list), 1) 
-            temperature = sum(temperature_list) / len(temperature_list)     
-            # Convert temp from C to F
-            fahrenheit = round(temperature*1.8+32, 1)
-
-            if len(temperature_sensor_delay_list) != 3:
-                temperature_sensor_delay_list[0] = get_date_and_time()[2]
-                temperature_sensor_delay_list.append(fahrenheit)
-                temperature_sensor_delay_list.append(humidity)
-                
+            temperature = float(match.group(1))
+            fahrenheit = float(temperature*1.8+32)
+            fahrenheit = round(fahrenheit, 1)
+            humidity = float(match.group(2))
+            humidity = round(humidity, 1) 
+            current_time = get_date_and_time()[2]
             
-            elif len(temperature_sensor_delay_list) == 3:
-                print current_time
-                temperature_sensor_delay_list[0] = current_time
-                temperature_sensor_delay_list[1] = fahrenheit
-                temperature_sensor_delay_list[2] = humidity
+            # add new temp sensor data to list
+            temperature_sensor_delay_list[0] = current_time
+            temperature_sensor_delay_list[1] = fahrenheit
+            temperature_sensor_delay_list[2] = humidity
 
-        else:
-            time.sleep(3)
+    except:
+        time.sleep(3)
+        print "Something failed in get_temp_and_humidity"
+        get_temp_and_humidity()
 
 def fan(fahrenheit):
     """
@@ -237,7 +266,9 @@ def fan(fahrenheit):
 def lights(motion):
     # sets the lights on or off depending on motion being detected in the room
     global light_delay            # number of minutes to wait until the lights shut off
-    global false_time_list
+    global light_status_list
+    current_time = get_date_and_time()[2]
+
     # Turns lights on when motion is detected
     if motion == True:
         # NOTE!! For some reason when the relay is told False it's actually turns on
@@ -245,33 +276,14 @@ def lights(motion):
         GPIO.output(light_bank_1, False)
         GPIO.output(light_bank_2, False)
         GPIO.output(light_bank_3, False)
-        # resets the list of times for false list
-        false_time_list = []
-        light_status = True
 
     elif motion == False:
-        if len(false_time_list) == 0:
-            current_time = get_date_and_time()[2]
-            false_time_list.append(current_time)
-
-        if len(false_time_list) !=0:
-
-            current_time = get_date_and_time()[2]
-            false_time = false_time_list[0]
-            elapsed_time = abs(false_time - current_time)
-            light_status = True
-            # where light delay is evaluated against the lowest time, which determines if the lights should be
-            # shut off or not
-            if elapsed_time >= light_delay:
-                # NOTE!! For some reason when the relay is told False it's actually turns on
-                # For some reason the boolean logic is reversed when dealing with the relay
-                GPIO.output(light_bank_1, True)
-                GPIO.output(light_bank_2, True)
-                GPIO.output(light_bank_3, True)
-                light_status = False
-
-    return light_status
-
+        # NOTE!! For some reason when the relay is told False it's actually turns on
+        # For some reason the boolean logic is reversed when dealing with the relay
+        GPIO.output(light_bank_1, True)
+        GPIO.output(light_bank_2, True)
+        GPIO.output(light_bank_3, True)
+        light_status_list[0] = current_time
 
 def get_motion():
     # Gets the motion in the room as a boolean
@@ -279,12 +291,15 @@ def get_motion():
     motion = GPIO.input(motion_sensor)
     if motion == 0:
         motion = False
+        current_time = get_date_and_time()[2]
+        motion_list[0] = current_time
 
     if motion == 1:
         motion = True
     
-    motion_detected_time_in_minutes = get_date_and_time()[2]
-    return motion, motion_detected_time_in_minutes
+    light_status_list[1] = motion
+    return motion
+    
 
 def get_outdoor_temperature():
     """
@@ -302,22 +317,7 @@ def get_outdoor_temperature():
     # grabs current time in minutes
     current_time = get_date_and_time()[2]
     
-    if len(outside_temperature_list) == 0:
-        outside_temperature_list.append(current_time + outside_temperature_delay + 1)
-
-    # grabs the time of the last added temperature
-    last_added = outside_temperature_list[0]
-    # finds elapsed time from last added and the current time
-    elapsed_time = abs(last_added - current_time)
-
-
-    # if elapsed time is less then preset ammount then get last temp added and return that value
-    if elapsed_time <= outside_temperature_delay:
-        last_temp = outside_temperature_list[-1]
-        return last_temp
-
-    # if elapsed time is greater than the delay then get a new outside temperature
-    if elapsed_time > outside_temperature_delay:
+    try:
         br = mechanize.Browser()
 
         # Browser options
@@ -340,32 +340,18 @@ def get_outdoor_temperature():
         br['where'] = "Olivet, MI"
         html = br.submit()
         html = html.read()
-
-        outside_list = []
         # matches temperature and unit, then append it to a list
         match = re.search('<span itemprop="temperature-fahrenheit">(\d*)</span>', html)
-        outside_list.append(int(match.group(1)))
-        match = re.search('<span class="wx-unit">(.)</span>', html) 
-        outside_list.append(u'\xb0'.encode("UTF-8") + match.group(1))
+        outside_temperature = int(match.group(1))
+        # match = re.search('<span class="wx-unit">(.)</span>', html) 
+        # outside_list.append(u'\xb0'.encode("UTF-8") + match.group(1))
         
         # gets current outside temperature and sets it to a variable    
-        current_outside_temperature = outside_list[0]
+        outside_temperature_list[0] = current_time
+        outside_temperature_list[1] = outside_temperature
 
-        if current_outside_temperature not in outside_temperature_list:
-            # gets current time in minutes
-            last_checked = get_date_and_time()[2]
-            # adds current time in minutes to outside_temperature_list[0]
-            outside_temperature_list[0] = last_checked
-            # appends current temperature to outside_temperature_list
-            outside_temperature_list.append(current_outside_temperature)
-            return current_outside_temperature
-
-
-    if len(outside_temperature_list) > 10:
-        last_checked = outside_temperature_list[0]
-        lowest_temp_val = min(outside_temperature_list[1:])
-        outside_temperature_list = [last_checked, lowest_temp_val]
-
+    except:
+        print "Error in get_outdoor_temperature"
 
 def get_date_and_time():
     """
@@ -416,7 +402,6 @@ def get_external_ip():
         chars = re.findall('\&\#(\d*)', match.group(1))
         external_ip = ''.join([chr(int(char)) for char in chars])
         return external_ip
-
 
 def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
     """ 
