@@ -37,7 +37,7 @@ light_bank_3 = 23                   # Pin 4 on 4-Channel Relay
 motion_sensor = 11                  # Pin for Motion Sensor Input
 temp = 4                            # Pin for Temperature/Humidity Sensor
 desired_temp = 75                   # The temperature you would like it to be           
-light_delay = 1 
+light_delay = 15
 temp_sensor_delay = 3
 outside_temperature_delay = 10
 
@@ -49,7 +49,7 @@ temperature_sensor_delay_list = []
 GPIO.setwarnings(False)         
 GPIO.setmode(GPIO.BCM)              # GPIO Board init
 
-GPIO.setup(fan_motor, GPIO.OUT)           # Inits the relay connected to the fan
+GPIO.setup(fan_motor, GPIO.OUT)     # Inits the relay connected to the fan
 GPIO.setup(light_bank_1, GPIO.OUT)  # "         "
 GPIO.setup(light_bank_2, GPIO.OUT)  # "         "
 GPIO.setup(light_bank_3, GPIO.OUT)  # "         "
@@ -64,24 +64,24 @@ NEED TO WRITE A TIMING FUNCTION TO HANDLE ALL OF THE TIMING OF LIGHTS, TEMP, FAN
 def main():
     
     while True:
-        try:    
-            motion = get_motion()
-            motion_detected_time_in_minutes = motion[1]
-            motion = motion[0]
-            temperature = get_temp_and_humidity()
-            fahrenheit = temperature_sensor_delay_list[1]
-            humidity = temperature_sensor_delay_list[2]
-            fan_status = fan(fahrenheit)
-            outside_temperature = get_outdoor_temperature()
-                
-            light_status = lights(motion)
+        # try:    
+        motion = get_motion()
+        motion_detected_time_in_minutes = motion[1]
+        motion = motion[0]
+        temperature = get_temp_and_humidity()
+        fahrenheit = temperature_sensor_delay_list[1]
+        humidity = temperature_sensor_delay_list[2]
+        fan_status = fan(fahrenheit)
+        outside_temperature = get_outdoor_temperature()
+            
+        light_status = lights(motion)
 
             # print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature)
             # post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion)
         
-        except:
-            sys_exit_commands()
-            sys.exit()
+        # except:
+        #     sys_exit_commands()
+        #     sys.exit()
 
 def print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature):
         print '     '
