@@ -1,21 +1,20 @@
-import flask, flask.views
+import flask
 
 app = flask.Flask(__name__)
 
-
-
-class View(flask.views.MethodView):
-	def get(self):
-		return flask.render_template('index.html')
-
-app.add_url_rule('/', view_func=View.as_view('main'))
-
-
-
-
-
-
-
+@app.route('/')
+def index():
+    response = "hello, world\n"
+    response += '<a href="' + flask.url_for('temperature') + '">Temperature</a>'
+    response += '<button type="button">up</button>'
+    response += '<button type="button">down</button>'
+    
+    return response
+	
+@app.route('/temp_data')
+def temperature():
+	
+	return '75'
 
 
 
