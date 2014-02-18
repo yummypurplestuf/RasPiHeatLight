@@ -41,6 +41,7 @@ light_status_list = [0, 0]                  # [time in minutes when motion becam
 outside_temperature_list = [0, 0]           # [time in minutes when weather.com was last check, outside temperature]
 motion_list = [0, 0]                        # [time in minutes when motion became True, current motion true/false]
 temperature_sensor_delay_list = [0, 0, 0]   # [time in minutes when temperature sensor was last ran, fahrenheit, humidity]
+fan_list = [0, 0]
 
 desired_temp = 75                           # The temperature you would like it to be           
 light_delay = 2                             # number of minutes which should elapse without motion to turn off the lights
@@ -135,7 +136,7 @@ def check_timing(motion):
             lights(motion = False)
     # tells the fan the most recent temperature in order to make it's decisions
     if fahrenheit:
-        fan(fahrenheit)
+        fan()
     # if the elapsed time is equal to delay then run the external temp function
     if outside_temperature_list:
         if sum(outside_temperature_list) == 0:
@@ -143,7 +144,7 @@ def check_timing(motion):
         elapsed_time = abs(outside_time - current_time)
         if elapsed_time == outside_temperature_delay:
             get_outdoor_temperature()
-    print light_status_list, motion_list, temperature_sensor_delay_list, outside_temperature_list
+    print light_status_list, motion_list, temperature_sensor_delay_list, fan_list, outside_temperature_list
 
 def get_temp_and_humidity():
     """
@@ -171,7 +172,7 @@ def get_temp_and_humidity():
     except:
         time.sleep(3)
 
-def fan(fahrenheit):
+def fan():
     """
     eventually the code needs to look like:
 
@@ -184,65 +185,81 @@ def fan(fahrenheit):
     by either cold or hot water (depending on the season) you must 
     know which one it is in order to heat or cool the room accordingly
     """
-    cold_outside = [1,2,3,11,12]
-    hot_outside = [6,7,8,9]
-    easy_months = cold_outside + hot_outside
-    current_date = get_date_and_time()[0]
-    current_date = current_date.split('/')
-    current_month = int(current_date[0])
-    if current_month in cold_outside:
-        # then heat will be needed
-        current_air_value = 'hot'
-        if fahrenheit < desired_temp:
-            GPIO.output(fan_motor, False)
-            fan_status = 'ON'
-        elif fahrenheit > desired_temp:
-            GPIO.output(fan_motor, True)
-            fan_status = 'OFF'
-
-    elif current_month in hot_outside:
-        # then air conditioning will be needed
-        current_air_value = 'cold'
-        if fahrenheit > desired_temp:
-            GPIO.output(fan_motor, False)
-            fan_status = 'ON'
-        elif fahrenheit < desired_temp:
-            GPIO.output(fan_motor, True)
-            fan_status = 'OFF'
+    global fan_list
+    global temperature_sensor_delay_list
+    global desired_temp
+    fahrenheit = int(temperature_sensor_delay_list[1])
     
-    elif current_month not in easy_months:
-        # if the current month is not obvious then check www.weather.com
-        # and compare the temperature accordingly
-        outside_temperature = get_outdoor_temperature()
-        outside_temperature = int(outside_temperature[0])
+    if fahrenheit == desired_temp:
+        GPIO.output(fan_motor, True)
+        fan_status = False
 
-        if outside_temperature > 65:
-            # Means this is spring or warmer weather
-            current_air_value = 'hot'
-            if fahrenheit < desired_temp:
-                GPIO.output(fan_motor, False)
-                fan_status = 'ON'
-            elif fahrenheit > desired_temp:
-                GPIO.output(fan_motor, True)
-                fan_status = 'OFF'
-            else:
-                GPIO.output(fan_motor, True)
-                fan_status = 'OFF'
+    if fahrenheit > desired_temp:
+        GPIO.output(fan_motor, False)
+        fan_status = True
 
-        if outside_temperature < 65:
-            # means it is winter or colder weather
-            current_air_value = 'cold'
-            if fahrenheit < desired_temp:
-                GPIO.output(fan_motor, False)
-                fan_status = 'ON'
-            elif fahrenheit > desired_temp:
-                GPIO.output(fan_motor, True)
-                fan_status = 'OFF'
-            else:
-                GPIO.output(fan_motor, True)
-                fan_status = 'OFF'
+    fan_list = [fan_status]
 
-    return fan_status, current_air_value
+
+    # WILL BE USED LATER
+    # cold_outside = [1,2,3,11,12]
+    # hot_outside = [6,7,8,9]
+    # easy_months = cold_outside + hot_outside
+    # current_date = get_date_and_time()[0]
+    # current_date = current_date.split('/')
+    # current_month = int(current_date[0])
+    # if current_month in cold_outside:
+    #     # then heat will be needed
+    #     current_air_value = 'hot'
+    #     if fahrenheit < desired_temp:
+    #         GPIO.output(fan_motor, False)
+    #         fan_status = 'ON'
+    #     elif fahrenheit > desired_temp:
+    #         GPIO.output(fan_motor, True)
+    #         fan_status = 'OFF'
+
+    # elif current_month in hot_outside:
+    #     # then air conditioning will be needed
+    #     current_air_value = 'cold'
+    #     if fahrenheit > desired_temp:
+    #         GPIO.output(fan_motor, False)
+    #         fan_status = 'ON'
+    #     elif fahrenheit < desired_temp:
+    #         GPIO.output(fan_motor, True)
+    #         fan_status = 'OFF'
+    
+    # elif current_month not in easy_months:
+    #     # if the current month is not obvious then check www.weather.com
+    #     # and compare the temperature accordingly
+    #     outside_temperature = get_outdoor_temperature()
+    #     outside_temperature = int(outside_temperature[0])
+
+    #     if outside_temperature > 65:
+    #         # Means this is spring or warmer weather
+    #         current_air_value = 'hot'
+    #         if fahrenheit < desired_temp:
+    #             GPIO.output(fan_motor, False)
+    #             fan_status = 'ON'
+    #         elif fahrenheit > desired_temp:
+    #             GPIO.output(fan_motor, True)
+    #             fan_status = 'OFF'
+    #         else:
+    #             GPIO.output(fan_motor, True)
+    #             fan_status = 'OFF'
+
+    #     if outside_temperature < 65:
+    #         # means it is winter or colder weather
+    #         current_air_value = 'cold'
+    #         if fahrenheit < desired_temp:
+    #             GPIO.output(fan_motor, False)
+    #             fan_status = 'ON'
+    #         elif fahrenheit > desired_temp:
+    #             GPIO.output(fan_motor, True)
+    #             fan_status = 'OFF'
+    #         else:
+    #             GPIO.output(fan_motor, True)
+    #             fan_status = 'OFF'
+
     """
     *** NEED TO ADD TEST TO SEE IF HEAT OR AC IS ON
     """
