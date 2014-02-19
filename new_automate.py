@@ -42,11 +42,13 @@ outside_temperature_list = [0, 0]           # [time in minutes when weather.com 
 motion_list = [0, 0]                        # [time in minutes when motion became True, current motion true/false]
 temperature_sensor_delay_list = [0, 0, 0]   # [time in minutes when temperature sensor was last ran, fahrenheit, humidity]
 fan_list = [0, 0]
+google_spreadsheet_posted = [0, False]
 
 desired_temp = 75                           # The temperature you would like it to be           
 light_delay = 2                             # number of minutes which should elapse without motion to turn off the lights
 temp_sensor_delay = 3                       # how often to check the temperature sensor (in minutes)
 outside_temperature_delay = 60              # how often to check the outside temperature (in minutes)
+post_delay = 3
 ###################################################################################
 
 GPIO.setwarnings(False)         
@@ -76,22 +78,6 @@ def main():
         # except:
         #     sys_exit_commands()
         #     sys.exit()
-
-def print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature):
-        print '     '
-        print "Motion is: " + str(motion) + ' ' + str(motion_detected_time_in_minutes)
-        print "Light Status: " + str(light_status)
-        print "Fan Status: " + str(fan_status)
-        print "Temperature Stats: " + str(fahrenheit) + ' ' + str(humidity)
-        print "Outside Temperature: " + str(outside_temperature)
-        time.sleep(1)
-
-def sys_exit_commands():
-    # turns off all lights and fan when something has failed in the program
-    GPIO.output(fan_motor, True)
-    GPIO.output(light_bank_1, True)
-    GPIO.output(light_bank_2, True)
-    GPIO.output(light_bank_3, True)
     
 def check_timing(motion):
     """
@@ -144,7 +130,18 @@ def check_timing(motion):
         elapsed_time = abs(outside_time - current_time)
         if elapsed_time == outside_temperature_delay:
             get_outdoor_temperature()
-    print light_status_list, motion_list, temperature_sensor_delay_list, fan_list, outside_temperature_list
+
+    if light_status_list and motion_list:
+        if light_status_list[0] + motion_list[0] != 0: 
+            elapsed_time = abs(light_status_list[0] - motion_list[0])
+            if elapsed_time == post_delay:                
+                if google_spreadsheet_posted[1] == False:
+                    post_to_google_spreadsheet()
+
+    print google_spreadsheet_posted
+
+
+    # print light_status_list, motion_list, temperature_sensor_delay_list, fan_list, outside_temperature_list, google_spreadsheet_posted 
 
 def get_temp_and_humidity():
     """
@@ -195,6 +192,9 @@ def fan():
         fan_status = False
 
     if fahrenheit > desired_temp:
+        GPIO.output(fan_motor, True)
+        fan_status = False
+    if fahrenheit < desired_temp:
         GPIO.output(fan_motor, False)
         fan_status = True
 
@@ -218,48 +218,6 @@ def fan():
     #         GPIO.output(fan_motor, True)
     #         fan_status = 'OFF'
 
-    # elif current_month in hot_outside:
-    #     # then air conditioning will be needed
-    #     current_air_value = 'cold'
-    #     if fahrenheit > desired_temp:
-    #         GPIO.output(fan_motor, False)
-    #         fan_status = 'ON'
-    #     elif fahrenheit < desired_temp:
-    #         GPIO.output(fan_motor, True)
-    #         fan_status = 'OFF'
-    
-    # elif current_month not in easy_months:
-    #     # if the current month is not obvious then check www.weather.com
-    #     # and compare the temperature accordingly
-    #     outside_temperature = get_outdoor_temperature()
-    #     outside_temperature = int(outside_temperature[0])
-
-    #     if outside_temperature > 65:
-    #         # Means this is spring or warmer weather
-    #         current_air_value = 'hot'
-    #         if fahrenheit < desired_temp:
-    #             GPIO.output(fan_motor, False)
-    #             fan_status = 'ON'
-    #         elif fahrenheit > desired_temp:
-    #             GPIO.output(fan_motor, True)
-    #             fan_status = 'OFF'
-    #         else:
-    #             GPIO.output(fan_motor, True)
-    #             fan_status = 'OFF'
-
-    #     if outside_temperature < 65:
-    #         # means it is winter or colder weather
-    #         current_air_value = 'cold'
-    #         if fahrenheit < desired_temp:
-    #             GPIO.output(fan_motor, False)
-    #             fan_status = 'ON'
-    #         elif fahrenheit > desired_temp:
-    #             GPIO.output(fan_motor, True)
-    #             fan_status = 'OFF'
-    #         else:
-    #             GPIO.output(fan_motor, True)
-    #             fan_status = 'OFF'
-
     """
     *** NEED TO ADD TEST TO SEE IF HEAT OR AC IS ON
     """
@@ -268,9 +226,9 @@ def lights(motion):
     # sets the lights on or off depending on motion being detected in the room
     global light_delay
     global light_status_list
-
+    light_status = light_status_list[1]
     # Turns lights on when motion is detected
-    if motion == True:
+    if motion == True and light_status_list[1] != True:
         # NOTE!! For some reason when the relay is told False it's actually turns on
         # For some reason the boolean logic is reversed when dealing with the relay
         GPIO.output(light_bank_1, False)
@@ -298,6 +256,7 @@ def get_motion():
     if motion == 1:
         motion = True
         motion_list[0] = current_time
+        google_spreadsheet_posted[1] = False
 
     elif motion == 0:
         motion = False
@@ -402,7 +361,7 @@ def get_external_ip():
         external_ip = ''.join([chr(int(char)) for char in chars])
         return external_ip
 
-def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
+def post_to_google_spreadsheet():
     """ 
     These are used for login information with Google Spread sheet, create a user_info.txt file in the same directory as the automate.py file.
     In the user_info.txt file add:
@@ -415,6 +374,12 @@ def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
     Don't forget to create a Google Spreadsheet and change the 'Computer Science Lab Temperature' down below to the name of your spreadsheet file.
     """
 
+    global google_spreadsheet_posted
+    date_time = get_date_and_time()
+    print date_time
+    current_date = date_time[0]
+    current_time = date_time[1]
+    time_in_minutes = date_time[2]
 
     user_info = open('/home/pi/RasPiHeatLight/user_info.txt', 'r')
     user_name = user_info.readline()
@@ -422,7 +387,7 @@ def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
     spreadsheet = 'Computer Science Lab Temperature'
     user_info.close()
 
-                # Login with your Google account
+    # Login with your Google account
     try:
         gc = gspread.login(user_name, user_pass)
         print "Attempting to Login"
@@ -438,14 +403,32 @@ def post_to_google_spreadsheet(date, time, fahrenheit, humidity, motion):
         # A1 = worksheet.acell('A1')
         
         # worksheet.append_row(date)
-        data_set = [date, time, fahrenheit, humidity, motion]
+        data_set = [current_date, current_time]
         worksheet.add_rows(1)
         row = str(worksheet.row_count)
         columns = "ABCDEFG"
         for col, datum in enumerate(data_set):
             worksheet.update_acell(columns[col] + row, datum)
+        google_spreadsheet_posted[1] = current_time
+        posted = True
     except:
         print "Unable to open the spreadsheet.  Check your filename: %s" % spreadsheet
-        
+    google_spreadsheet_posted = [time_in_minutes, posted]
+
+def print_status(motion, motion_detected_time_in_minutes, light_status, fan_status, fahrenheit, humidity, outside_temperature):
+        print '     '
+        print "Motion is: " + str(motion) + ' ' + str(motion_detected_time_in_minutes)
+        print "Light Status: " + str(light_status)
+        print "Fan Status: " + str(fan_status)
+        print "Temperature Stats: " + str(fahrenheit) + ' ' + str(humidity)
+        print "Outside Temperature: " + str(outside_temperature)
+        time.sleep(1)
+
+def sys_exit_commands():
+    # turns off all lights and fan when something has failed in the program
+    GPIO.output(fan_motor, True)
+    GPIO.output(light_bank_1, True)
+    GPIO.output(light_bank_2, True)
+    GPIO.output(light_bank_3, True)       
 
 if __name__ == "__main__": main()
