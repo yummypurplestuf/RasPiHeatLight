@@ -45,10 +45,10 @@ fan_list = [0, 0]
 google_spreadsheet_posted = [0, False]
 
 desired_temp = 75                           # The temperature you would like it to be           
-light_delay = 2                             # number of minutes which should elapse without motion to turn off the lights
-temp_sensor_delay = 3                       # how often to check the temperature sensor (in minutes)
+light_delay = 60                            # number of minutes which should elapse without motion to turn off the lights
+temp_sensor_delay = 5                       # how often to check the temperature sensor (in minutes)
 outside_temperature_delay = 60              # how often to check the outside temperature (in minutes)
-post_delay = 3
+post_delay = 180
 ###################################################################################
 
 GPIO.setwarnings(False)         
@@ -133,7 +133,8 @@ def check_timing(motion):
 
     if light_status_list and motion_list:
         if light_status_list[0] + motion_list[0] != 0: 
-            elapsed_time = abs(light_status_list[0] - motion_list[0])
+            current_time = get_date_and_time()[2]
+            elapsed_time = abs(motion_list[0] - current_time)
             if elapsed_time == post_delay:                
                 if google_spreadsheet_posted[1] == False:
                     post_to_google_spreadsheet()
