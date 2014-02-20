@@ -130,14 +130,22 @@ def check_timing(motion):
         elapsed_time = abs(outside_time - current_time)
         if elapsed_time == outside_temperature_delay:
             get_outdoor_temperature()
-
+    # controls when to post to google spreed sheet when someone has left the room for an extended time period
     if light_status_list and motion_list:
         if light_status_list[0] + motion_list[0] != 0: 
             current_time = get_date_and_time()[2]
             elapsed_time = abs(motion_list[0] - current_time)
             if elapsed_time == post_delay:                
                 if google_spreadsheet_posted[1] == False:
-                    post_to_google_spreadsheet()
+                    occupant_status = "Entry Log"
+                    post_to_google_spreadsheet(occupant_status)
+
+            elapsed_time = abs(light_status_list[0] - motion_list[0])
+            if elapsed_time == post_delay:
+                if google_spreadsheet_posted[1] == False:
+                    occupant_status = 'Exit'
+                    post_to_google_spreadsheet(occupant_status)
+
 
     print google_spreadsheet_posted
 
@@ -355,14 +363,14 @@ def get_external_ip():
     html = unicode(html, errors='ignore')
 
     # Searches through the raw html file and grabs the paragraph "the-ip", where the external IP is displayed 
-    match = re.search('<div class="the-ip">(.*)</div>', html)
+    match = re.search('<div class="the-ip>"(.*)</div>', html)
     # Looks at "the-ip" section and finds html char, i.e. '&#58' 
     if match:
         chars = re.findall('\&\#(\d*)', match.group(1))
         external_ip = ''.join([chr(int(char)) for char in chars])
         return external_ip
 
-def post_to_google_spreadsheet():
+def post_to_google_spreadsheet(occupant_status):
     """ 
     These are used for login information with Google Spread sheet, create a user_info.txt file in the same directory as the automate.py file.
     In the user_info.txt file add:
@@ -388,30 +396,39 @@ def post_to_google_spreadsheet():
     spreadsheet = 'Computer Science Lab Temperature'
     user_info.close()
 
-    # Login with your Google account
+    # Login with your Google account and get all sheets inside of the spreadsheet
     try:
         gc = gspread.login(user_name, user_pass)
         print "Attempting to Login"
+        workbook = gc.open(spreadsheet)
+        sheet = workbook.worksheets()
+        list_of_sheets = []
+        for i in sheet:
+            i = str(i)
+            sheets = re.search('<Worksheet \'(.*)\' ',i)
+            list_of_sheets.append(sheets.group(1))
     except:
         print "Unable to log in.  Check your email address/password"
         
 
-    # Open a worksheet from your spreadsheet using the filename
+    # Opens a specific sheet and post data to the correct sheet inside the workbook
     try:
-        worksheet = gc.open(spreadsheet).sheet1
-        # Alternatively, open a spreadsheet using the spreadsheet's key
-        # worksheet = gc.open_by_key('0BmgG6nO_6dprdS1MN3d3MkdPa142WFRrdnRRUWl1UFE')
-        # A1 = worksheet.acell('A1')
+        if occupant_status in list_of_sheets:
+            active_worksheet = workbook.worksheet(occupant_status)
+
+        if occupant_status in list_of_sheets:
+            active_worksheet = workbook.worksheet(occupant_status)
         
-        # worksheet.append_row(date)
         data_set = [current_date, current_time]
-        worksheet.add_rows(1)
-        row = str(worksheet.row_count)
+        active_worksheet.add_rows(1)
+        row = str(active_worksheet.row_count)
         columns = "ABCDEFG"
         for col, datum in enumerate(data_set):
-            worksheet.update_acell(columns[col] + row, datum)
+            active_worksheet.update_acell(columns[col] + row, datum)
         google_spreadsheet_posted[1] = current_time
         posted = True
+        print 'entry succeeded'
+
     except:
         print "Unable to open the spreadsheet.  Check your filename: %s" % spreadsheet
     google_spreadsheet_posted = [time_in_minutes, posted]
