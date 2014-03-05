@@ -45,7 +45,7 @@ fan_list = [0, 0]
 google_spreadsheet_posted = [0, False]
 
 desired_temp = 75                           # The temperature you would like it to be           
-light_delay = 60                            # number of minutes which should elapse without motion to turn off the lights
+light_delay = 2                             # number of minutes which should elapse without motion to turn off the lights
 temp_sensor_delay = 5                       # how often to check the temperature sensor (in minutes)
 outside_temperature_delay = 60              # how often to check the outside temperature (in minutes)
 post_delay = 180
@@ -137,17 +137,17 @@ def check_timing(motion):
             elapsed_time = abs(motion_list[0] - current_time)
             if elapsed_time == post_delay:                
                 if google_spreadsheet_posted[1] == False:
-                    occupant_status = "Entry Log"
+                    occupant_status = "Exit Log"
+                    print occupant_status
                     post_to_google_spreadsheet(occupant_status)
 
             elapsed_time = abs(light_status_list[0] - motion_list[0])
             if elapsed_time == post_delay:
                 if google_spreadsheet_posted[1] == False:
-                    occupant_status = 'Exit'
+                    occupant_status = 'Entry Log'
+                    print occupant_status
                     post_to_google_spreadsheet(occupant_status)
 
-
-    print google_spreadsheet_posted
 
 
     # print light_status_list, motion_list, temperature_sensor_delay_list, fan_list, outside_temperature_list, google_spreadsheet_posted 
@@ -259,18 +259,23 @@ def get_motion():
     # If there is motion then return True and return current time
     global light_status_list
     global motion_list
+    global post_delay
     motion = GPIO.input(motion_sensor)
     current_time = get_date_and_time()[2]
 
+    elapsed_time = abs(light_status_list[0] - motion_list[0])
     if motion == 1:
         motion = True
         motion_list[0] = current_time
-        google_spreadsheet_posted[1] = False
 
     elif motion == 0:
         motion = False
         light_status_list[0] = current_time
-        
+
+    actual_time = abs(post_delay-1)
+    if elapsed_time == actual_time:
+        google_spreadsheet_posted[1] = False
+
     motion_list[1] = motion
     return motion
 
@@ -416,18 +421,15 @@ def post_to_google_spreadsheet(occupant_status):
         if occupant_status in list_of_sheets:
             active_worksheet = workbook.worksheet(occupant_status)
 
-        if occupant_status in list_of_sheets:
-            active_worksheet = workbook.worksheet(occupant_status)
-        
-        data_set = [current_date, current_time]
-        active_worksheet.add_rows(1)
-        row = str(active_worksheet.row_count)
-        columns = "ABCDEFG"
-        for col, datum in enumerate(data_set):
-            active_worksheet.update_acell(columns[col] + row, datum)
-        google_spreadsheet_posted[1] = current_time
-        posted = True
-        print 'entry succeeded'
+            data_set = [current_date, current_time]
+            active_worksheet.add_rows(1)
+            row = str(active_worksheet.row_count)
+            columns = "ABCDEFG"
+            for col, datum in enumerate(data_set):
+                active_worksheet.update_acell(columns[col] + row, datum)
+            google_spreadsheet_posted[1] = current_time
+            posted = True
+            print 'entry succeeded'
 
     except:
         print "Unable to open the spreadsheet.  Check your filename: %s" % spreadsheet
